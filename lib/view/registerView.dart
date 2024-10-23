@@ -52,6 +52,7 @@ class _RegisterVIewState extends State<RegisterVIew> {
           padding: EdgeInsets.all(16.0),
           child: Column(
             children: [
+              //contains the basic textEditors
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: TextField(
@@ -74,6 +75,8 @@ class _RegisterVIewState extends State<RegisterVIew> {
                       hintText: 'enter the password',
                     )),
               ),
+              //contains the part that process and links the code to firebase remove most of the errors
+              //also contains all the navigators from this page to the others
               SizedBox(
                 child: TextButton(
                     // ===============================the very code for the button for submitting as well as checking the errors
@@ -83,10 +86,16 @@ class _RegisterVIewState extends State<RegisterVIew> {
                       final email = _email.text;
                       final password = _password.text;
                       try {
-                        final userCredential = await FirebaseAuth.instance
+                        await FirebaseAuth.instance
                             .createUserWithEmailAndPassword(
-                                email: email, password: password);
-                        developer.log(userCredential.toString());
+                          email: email,
+                          password: password,
+                        );
+                        final user=FirebaseAuth.instance.currentUser;
+                        user?.sendEmailVerification();
+                        Navigator.of(context).pushNamed(
+                          verifyEmailRoute,
+                        );
                       } catch (e) {
                         String errorMessage;
                         if (e is FirebaseAuthException) {
@@ -118,19 +127,19 @@ class _RegisterVIewState extends State<RegisterVIew> {
                             default:
                               errorMessage = 'Unknown error: ${e.message}';
                           }
-                         ShowErrorDialog(context, errorMessage);
-                        }
-                        else{
+                          ShowErrorDialog(context, errorMessage);
+                        } else {
                           ShowErrorDialog(context, e.toString());
                         }
                       }
                     },
                     child: Text('Register')),
               ),
+              //going to login page by removing the register page from the app completely from the memory
               TextButton(
                   onPressed: () {
                     Navigator.of(context).pushNamedAndRemoveUntil(
-                     loginRoute,
+                      loginRoute,
                       (route) => false,
                     );
                   },

@@ -6,7 +6,7 @@ import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:proj2/view/loginView.dart';
 import 'package:proj2/view/registerView.dart';
-
+//import for just the practice page;
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MaterialApp(
@@ -20,7 +20,7 @@ void main() {
       loginRoute: (context) => LoginView(),
       registerRoute: (context) => RegisterVIew(),
       notesRoute: (context) => NotesView(),
-
+      verifyEmailRoute : (context) => VerifyEmailView(),
     },
   ));
 }
@@ -81,16 +81,17 @@ class _NotesViewState extends State<NotesView> {
           ),
         ),
         actions: [
-          PopupMenuButton<MenuAction>(onSelected: (value)async {
-             switch(value){
-               case MenuAction.logout:
-                 final shouldLogout=await ShowLogOutDialog(context);
-                 if(shouldLogout){
-                   await FirebaseAuth.instance.signOut();
-                   Navigator.of(context).pushNamedAndRemoveUntil('/login/',(route)=>false);
-                 }
-                 break;
-             }
+          PopupMenuButton<MenuAction>(onSelected: (value) async {
+            switch (value) {
+              case MenuAction.logout:
+                final shouldLogout = await ShowLogOutDialog(context);
+                if (shouldLogout) {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/login/', (route) => false);
+                }
+                break;
+            }
           }, itemBuilder: (context) {
             return const [
               PopupMenuItem<MenuAction>(
@@ -105,18 +106,20 @@ class _NotesViewState extends State<NotesView> {
           })
         ],
       ),
-      body: Center(
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            const Text('Radhika is a genius but not greater than me',style: TextStyle(fontSize: 50),),
-            const Text('or is that true'),
-          ],
-        ),
+      body: const Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          const Text(
+            'This  is  sample only',
+            style: TextStyle(fontSize: 50),
+          ),
+          const Text('not fully developed yet'),
+        ],
       ),
     );
   }
 }
+
 Future<bool> ShowLogOutDialog(BuildContext context) {
   return showDialog(
       context: context,
@@ -125,13 +128,17 @@ Future<bool> ShowLogOutDialog(BuildContext context) {
           title: const Text('Sign out'),
           content: const Text('Are you sure you want to sign out'),
           actions: [
-            TextButton(onPressed: () {
-              Navigator.of(context).pop(false);
-            }, child: const Text('Cancel')),
-            TextButton(onPressed: () {
-              Navigator.of(context).pop(true);
-            }, child: const Text('Log Out')),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: const Text('Cancel')),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: const Text('Log Out')),
           ],
         );
-      }).then((value)=>value??false);
+      }).then((value) => value ?? false);
 }

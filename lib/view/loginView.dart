@@ -17,7 +17,6 @@ class LoginView extends StatefulWidget {
   State<LoginView> createState() => _LoginViewState();
 }
 
-
 class _LoginViewState extends State<LoginView> {
   //=======================making the text editing controller ========
   late final TextEditingController _email;
@@ -56,6 +55,7 @@ class _LoginViewState extends State<LoginView> {
           padding: EdgeInsets.all(16.0),
           child: Column(
             children: [
+              //contains the textEditors in the tools
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: TextField(
@@ -78,6 +78,8 @@ class _LoginViewState extends State<LoginView> {
                       hintText: 'enter the password',
                     )),
               ),
+              // contains the part that process and links the code to firebase remove most of the errors
+              //also contains all the navigators from this page to the others
               SizedBox(
                 child: TextButton(
                     onPressed: () async {
@@ -124,6 +126,7 @@ class _LoginViewState extends State<LoginView> {
                     },
                     child: Text('Login')),
               ),
+              //going from this page to register page using push named and remove until
               TextButton(
                   onPressed: () {
                     Navigator.of(context).pushNamedAndRemoveUntil(
