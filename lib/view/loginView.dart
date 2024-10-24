@@ -92,35 +92,39 @@ class _LoginViewState extends State<LoginView> {
                             .instance
                             .signInWithEmailAndPassword(
                                 email: email, password: password);
-                        Navigator.of(context).pushNamedAndRemoveUntil(
+                        final user=FirebaseAuth.instance.currentUser;
+                        if(user?.emailVerified==true){
+                          Navigator.of(context).pushNamedAndRemoveUntil(
                           notesRoute,
-                          (route) => false,
+                              (route) => false,
                         );
+                        }
+                        else{
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            verifyEmailRoute,
+                                (route) => false,
+                          );
+                        }
+
                       } catch (e) {
                         if (e is FirebaseAuthException) {
                           String errorMessage;
                           // Handling specific FirebaseAuth errors
                           switch (e.code) {
-                            case 'invalid-email':
-                              errorMessage = 'The email address is badly formatted.';
-                              break;
                             case 'user-not-found':
                               errorMessage = 'No user found with this email.';
                               break;
                             case 'wrong-password':
                               errorMessage = 'The password is invalid.';
                               break;
-                            case 'invalid-credential':
-                              errorMessage =
-                                  'The supplied auth credential is malformed or has expired.';
-                              break;
                             default:
                               errorMessage = 'Unknown error: ${e.message}';
                           }
                          ShowErrorDialog(context, errorMessage);
-                        } else {
-                          // General error handling
-                          ShowErrorDialog(context,e.toString());
+                        }
+                        else{
+                          ShowErrorDialog(context, e.toString());
+
                         }
                       }
                     },

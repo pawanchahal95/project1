@@ -112,24 +112,16 @@ class _RegisterVIewState extends State<RegisterVIew> {
                               errorMessage =
                                   'The password is too weak. Please enter a stronger password.';
                               break;
-                            case 'operation-not-allowed':
-                              errorMessage =
-                                  'Email/Password sign-in is disabled. Please enable it in the Firebase Console.';
-                              break;
-                            case 'too-many-requests':
-                              errorMessage =
-                                  'Too many attempts. Please wait a while before trying again.';
-                              break;
-                            case 'network-request-failed':
-                              errorMessage =
-                                  'Network error occurred. Please check your connection and try again.';
-                              break;
                             default:
                               errorMessage = 'Unknown error: ${e.message}';
                           }
                           ShowErrorDialog(context, errorMessage);
-                        } else {
-                          ShowErrorDialog(context, e.toString());
+                        }
+                        else{
+
+                      ShowErrorDialog(context, e.toString());
+
+
                         }
                       }
                     },

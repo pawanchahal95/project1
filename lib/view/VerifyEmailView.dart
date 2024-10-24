@@ -31,8 +31,10 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              const Text("We've sent you an email verification.Please open it to verify your account."),
-              const Text("If you haven't received a verification email yet, press the button below"),
+              const Text(
+                  "We've sent you an email verification.Please open it to verify your account."),
+              const Text(
+                  "If you haven't received a verification email yet, press the button below"),
               TextButton(
                   onPressed: () async {
                     final user = FirebaseAuth.instance.currentUser;
@@ -41,12 +43,12 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
                   child: const Text('Send email verification')),
               //temporary
               TextButton(
-                  onPressed: ()  {
-                   Navigator.of(context).pushNamedAndRemoveUntil(registerRoute,(route)=>false);
+                  onPressed: () {
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                        registerRoute, (route) => false);
                   },
                   child: const Text('Go BACK'))
             ],
-
           ),
         ),
       ),
