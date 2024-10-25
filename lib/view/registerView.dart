@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:proj2/constants/routes.dart';
-import 'package:proj2/firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'dart:developer' as developer show log;
-
+import 'package:proj2/services/auth/auth_service.dart';
 import 'package:proj2/utilities/showErrorDialog.dart';
+import 'package:proj2/services/auth/auth_exception.dart';
 
 class RegisterVIew extends StatefulWidget {
   RegisterVIew({super.key});
@@ -86,43 +83,23 @@ class _RegisterVIewState extends State<RegisterVIew> {
                       final email = _email.text;
                       final password = _password.text;
                       try {
-                        await FirebaseAuth.instance
-                            .createUserWithEmailAndPassword(
+                        await AuthService.firebase().createUser(
                           email: email,
                           password: password,
                         );
-                        final user=FirebaseAuth.instance.currentUser;
-                        user?.sendEmailVerification();
+                        final user = AuthService.firebase().currentUser;
+                      await  AuthService.firebase().sendEmailVerification();
                         Navigator.of(context).pushNamed(
                           verifyEmailRoute,
                         );
-                      } catch (e) {
-                        String errorMessage;
-                        if (e is FirebaseAuthException) {
-                          switch (e.code) {
-                            case 'invalid-email':
-                              errorMessage =
-                                  'The email address is badly formatted.';
-                              break;
-                            case 'email-already-in-use':
-                              errorMessage =
-                                  'The email is already in use by another account.';
-                              break;
-                            case 'weak-password':
-                              errorMessage =
-                                  'The password is too weak. Please enter a stronger password.';
-                              break;
-                            default:
-                              errorMessage = 'Unknown error: ${e.message}';
-                          }
-                          ShowErrorDialog(context, errorMessage);
-                        }
-                        else{
-
-                      ShowErrorDialog(context, e.toString());
-
-
-                        }
+                      } on WeakPasswordAuthException {
+                        await ShowErrorDialog(context, 'Weak password');
+                      } on EmailAlreadyInUseAuthException {
+                        await ShowErrorDialog(context, 'Email already in use');
+                      } on InvalidEmailAuthException {
+                        await ShowErrorDialog(context, 'Invalid email');
+                      } on GenericAuthException {
+                        await ShowErrorDialog(context, 'Authentication error');
                       }
                     },
                     child: Text('Register')),
