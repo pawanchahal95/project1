@@ -2,22 +2,91 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:proj2/services/crud/crud_exceptions.dart';
 
-class DatabaseAlreadyOpenException implements Exception {}
 
-class UnableToGetDocumentDirectory implements Exception {}
-
-class DatabaseIsNotOpen implements Exception {}
-
-class CouldNotDeleteUser implements Exception {}
-
-class UserAlreadyExists implements Exception {}
-
-class CouldNotFindUser implements Exception{}
 
 class NotesService {
+
   Database? _db;
 
+  Future<DatabaseNotes> updateNote({
+    required DatabaseNotes note,
+    required String text})
+  async {
+    final db=_getDatabaseOrThrow();
+    await getNote(id: note.id);
+   final updatesCount= await db.update(noteTable,{
+    textColumn: text,
+    isSyncedWithCloudColumn: 0,});
+   if(updatesCount==0){
+     throw CouldNotUpdateNote();
+   }
+   else{
+     return await getNote(id:note.id);
+   }
+  }
+
+  Future<Iterable<DatabaseNotes>> getAllNotes({required int id}) async {
+    final db = _getDatabaseOrThrow();
+    final notes = await db.query(noteTable);
+    return notes.map((noteRow) => DatabaseNotes.fromRow(noteRow));
+  }
+
+  Future<DatabaseNotes> getNote({required int id}) async {
+    final db = _getDatabaseOrThrow();
+    final notes = await db.query(
+      noteTable,
+      limit: 1,
+      where: 'id=?',
+      whereArgs: [id],
+    );
+    if (notes.isEmpty) {
+      throw CouldNotFindNote();
+    } else {
+      return DatabaseNotes.fromRow(notes.first);
+    }
+  }
+
+  Future<int> deleteAllNotes() async {
+    final db = _getDatabaseOrThrow();
+    return await db.delete(noteTable);
+  }
+
+  Future<void> deleteNote({required int id}) async {
+    final db = _getDatabaseOrThrow();
+    final deleteCount = await db.delete(
+      noteTable,
+      where: 'id=?',
+      whereArgs: [id],
+    );
+    if (deleteCount == 0) {
+      throw CouldNotDeleteNotes();
+    }
+  }
+
+  Future<DatabaseNotes> createNote({required DatabaseUser owner}) async {
+    final db = _getDatabaseOrThrow();
+    //make sure that the user exists in the database
+    // using the object of the databaseUser we check the getUser to fetch the user if the user matches we proceed else not
+    final dbUser = await getUser(email: owner.email);
+    if (dbUser != owner) {
+      throw CouldNotFindUser();
+    }
+    const text = '';
+    final noteId = await db.insert(noteTable, {
+      userIdColumn: owner.id,
+      textColumn: text,
+      isSyncedWithCloudColumn: 1,
+    });
+    final note = DatabaseNotes(
+      id: noteId,
+      userId: owner.id,
+      text: text,
+      isSyncedWithCloud: true,
+    );
+    return note;
+  }
 
   Future<DatabaseUser> getUser({required String email}) async {
     final db = _getDatabaseOrThrow();
@@ -27,10 +96,9 @@ class NotesService {
       where: 'email=?',
       whereArgs: [email.toLowerCase()],
     );
-    if(results.isEmpty){
+    if (results.isEmpty) {
       throw CouldNotFindUser();
-    }
-    else{
+    } else {
       return DatabaseUser.fromRow(results.first);
     }
   }
@@ -123,7 +191,6 @@ class DatabaseUser {
   bool operator ==(covariant DatabaseUser other) => id == other.id;
 
   @override
-  // TODO: implement hashCode
   int get hashCode => id.hashCode;
 }
 

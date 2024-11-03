@@ -13,7 +13,8 @@ class FirebaseAuthProvider implements AuthProvider {
   Future<AuthUser> createUser({
     required String email,
     required String password,
-  }) async {
+  })
+  async {
     try {
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
@@ -84,7 +85,6 @@ class FirebaseAuthProvider implements AuthProvider {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await FirebaseAuth.instance.signOut();
-
     } else {
       throw UserNotLoggedInAuthException();
     }
