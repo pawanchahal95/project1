@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:proj2/services/auth/auth_service.dart';
 import 'package:proj2/view/VerifyEmailView.dart';
-import 'package:proj2/view/notesView.dart';
+import 'package:proj2/view/notes/notesView.dart';
+import 'package:proj2/view/personalpoint/loginPage.dart';
 import 'constants/routes.dart';
 import 'package:proj2/view/loginView.dart';
 import 'package:proj2/view/registerView.dart';
+import 'package:proj2/view/notes/new_notes_view.dart';
+//temp import
+import 'temporaryfiles/notes.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,12 +18,13 @@ void main() {
     theme: ThemeData(
       primarySwatch: Colors.lightBlue,
     ),
-    home: HomePage(),
+    home: const HomePage(),
     routes: {
       loginRoute: (context) => LoginView(),
       registerRoute: (context) => RegisterVIew(),
-      notesRoute: (context) => NotesView(),
-      verifyEmailRoute: (context) => VerifyEmailView(),
+      notesRoute: (context) => const NotesView(),
+      verifyEmailRoute: (context) =>const VerifyEmailView(),
+      newNoteRoute: (context) => const NewNoteView(),
     },
   ));
 }

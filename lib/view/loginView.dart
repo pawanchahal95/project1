@@ -5,7 +5,7 @@ import '../services/auth/auth_exception.dart';
 import '../utilities/showErrorDialog.dart';
 
 class LoginView extends StatefulWidget {
-  LoginView({super.key});
+  const LoginView({super.key});
 
   @override
   State<LoginView> createState() => _LoginViewState();
@@ -38,15 +38,15 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.redAccent,
-        title: Center(
+        title: const Center(
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: const Text('Login page'),
+            padding: EdgeInsets.all(8.0),
+            child: Text('Login page'),
           ),
         ),
       ),
       body: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
               //contains the textEditors in the tools
@@ -57,7 +57,7 @@ class _LoginViewState extends State<LoginView> {
                     enableSuggestions: false,
                     autocorrect: false,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'enter the email address',
                     )),
               ),
@@ -68,7 +68,7 @@ class _LoginViewState extends State<LoginView> {
                     enableSuggestions: false,
                     autocorrect: false,
                     obscureText: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'enter the password',
                     )),
               ),
@@ -105,7 +105,7 @@ class _LoginViewState extends State<LoginView> {
                       await  ShowErrorDialog(context, 'Authentication error');
                       }
                     },
-                    child: Text('Login')),
+                    child: const Text('Login')),
               ),
               //going from this page to register page using push named and remove until
               TextButton(
@@ -115,7 +115,7 @@ class _LoginViewState extends State<LoginView> {
                       (route) => false,
                     );
                   },
-                  child: Text('Not registered yet? Register here!')),
+                  child: const Text('Not registered yet? Register here!')),
             ],
           )),
     );
