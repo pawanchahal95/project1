@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart' show join;
+import 'package:path/path.dart' ;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:proj2/services/crud/crud_exceptions.dart';
@@ -10,15 +10,23 @@ class NotesService {
   List<DatabaseNotes> _notes = [];
 
   static final NotesService _shared=NotesService._sharedInstance();
-  NotesService._sharedInstance();
+  NotesService._sharedInstance() {
+    _notesStreamController=StreamController<List<DatabaseNotes>>.broadcast(
+      onListen: (){
+        _notesStreamController.sink.add(_notes);
+      }
+    );
+  }
+
   factory NotesService()=>_shared;
 
-  final _notesStreamController =
-      StreamController<List<DatabaseNotes>>.broadcast();
+ late  final  StreamController<List<DatabaseNotes>> _notesStreamController;
 
   Stream<List<DatabaseNotes>> get allNotes => _notesStreamController.stream;
 
   Future<DatabaseUser> getOrCreateUser({required String email}) async {
+    //extra
+    await _ensureDbIsOpen();
     try {
       final user = await getUser(email: email);
       return user;
@@ -31,6 +39,8 @@ class NotesService {
   }
 
   Future<void> _cacheNotes() async {
+    //extra
+    await _ensureDbIsOpen();
     final allNotes = await getAllNotes();
     _notes = allNotes.toList();
     _notesStreamController.add(_notes);
@@ -67,7 +77,6 @@ class NotesService {
 
   Future<DatabaseNotes> getNote({required int id}) async {
     await _ensureDbIsOpen();
-
     final db = _getDatabaseOrThrow();
     final notes = await db.query(
       noteTable,
@@ -224,13 +233,15 @@ class NotesService {
       //create user table
       await db.execute(createUserTable);
       //create notes table
-      await db.execute(createNodeTable);
+      await db.execute(createNoteTable);
+
       await _cacheNotes();
     } on MissingPlatformDirectoryException {
       throw UnableToGetDocumentDirectory();
     }
   }
 }
+
 
 @immutable
 class DatabaseUser {
@@ -300,7 +311,7 @@ const createUserTable = '''
 	    PRIMARY KEY("id" AUTOINCREMENT)
       );
       ''';
-const createNodeTable = '''
+const createNoteTable = '''
      CREATE TABLE "note" (
 	   "id"	INTEGER NOT NULL,
 	   "user_id"	INTEGER NOT NULL,

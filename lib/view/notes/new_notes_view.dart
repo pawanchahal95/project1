@@ -47,7 +47,6 @@ class _NewNoteViewState extends State<NewNoteView> {
     final email = currentUser.email!;
     final owner = await _notesService.getUser(email: email);
     return await _notesService.createNote(owner: owner);
-
   }
 
   void _deleteNoteIfTextIsEmpty() {
@@ -85,21 +84,29 @@ class _NewNoteViewState extends State<NewNoteView> {
       body: FutureBuilder<DatabaseNotes>(
         future: createNewNote(),
         builder: (context, snapshot) {
-          switch (snapshot.connectionState){
+          switch (snapshot.connectionState) {
             case ConnectionState.done:
-              _note=snapshot.data as DatabaseNotes;
+              _note = snapshot.data as DatabaseNotes;
               _setupTextControllerListener();
               return TextField(
                 controller: _textController,
                 keyboardType: TextInputType.multiline,
+                decoration: InputDecoration(
+                  hintText: "Start Typing your notes.....",
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.black,
+                          width: 12,
+                        ))),
                 maxLines: null,
               );
+
             default:
               return const CircularProgressIndicator();
           }
         },
       ),
-
     );
   }
 }
