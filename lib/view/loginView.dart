@@ -85,10 +85,11 @@ class _LoginViewState extends State<LoginView> {
                        await AuthService.firebase().logIn(email: email, password: password,);
                         final user =AuthService.firebase().currentUser;
                         if (user?.isEmailVerified == true) {
-                          Navigator.of(context).pushNamedAndRemoveUntil(
+                          /*Navigator.of(context).pushNamedAndRemoveUntil(
                             notesRoute,
                             (route) => false,
-                          );
+                          );*/
+                          Navigator.of(context).pushNamedAndRemoveUntil(notesRoute,(route)=>false);
                         } else {
                           Navigator.of(context).pushNamedAndRemoveUntil(
                             verifyEmailRoute,

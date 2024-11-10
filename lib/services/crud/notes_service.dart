@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart' ;
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:proj2/services/crud/crud_exceptions.dart';
@@ -9,18 +9,18 @@ class NotesService {
   Database? _db;
   List<DatabaseNotes> _notes = [];
 
-  static final NotesService _shared=NotesService._sharedInstance();
+  static final NotesService _shared = NotesService._sharedInstance();
+
   NotesService._sharedInstance() {
-    _notesStreamController=StreamController<List<DatabaseNotes>>.broadcast(
-      onListen: (){
-        _notesStreamController.sink.add(_notes);
-      }
-    );
+    _notesStreamController =
+    StreamController<List<DatabaseNotes>>.broadcast(onListen: () {
+      _notesStreamController.sink.add(_notes);
+    });
   }
 
-  factory NotesService()=>_shared;
+  factory NotesService() => _shared;
 
- late  final  StreamController<List<DatabaseNotes>> _notesStreamController;
+  late final StreamController<List<DatabaseNotes>> _notesStreamController;
 
   Stream<List<DatabaseNotes>> get allNotes => _notesStreamController.stream;
 
@@ -39,23 +39,27 @@ class NotesService {
   }
 
   Future<void> _cacheNotes() async {
-    //extra
-    await _ensureDbIsOpen();
     final allNotes = await getAllNotes();
     _notes = allNotes.toList();
     _notesStreamController.add(_notes);
   }
-
+//changes made here after
   Future<DatabaseNotes> updateNote(
-      {required DatabaseNotes note, required String text}) async {
+      {required DatabaseNotes note, required String text})
+  async {
     await _ensureDbIsOpen();
-
     final db = _getDatabaseOrThrow();
     await getNote(id: note.id);
-    final updatesCount = await db.update(noteTable, {
-      textColumn: text,
-      isSyncedWithCloudColumn: 0,
-    });
+    final updatesCount = await db.update(
+      noteTable,
+      {
+        textColumn: text,
+        isSyncedWithCloudColumn: 0,
+      },
+      //changes made here afterwards
+      where: 'id = ?',
+      whereArgs: [note.id],
+    );
     if (updatesCount == 0) {
       throw CouldNotUpdateNote();
     } else {
@@ -242,13 +246,12 @@ class NotesService {
   }
 }
 
-
 @immutable
 class DatabaseUser {
   final int id;
   final String email;
 
-  const DatabaseUser({required this.id, required this.email});
+  const DatabaseUser({required this.id, required this.email,});
 
   DatabaseUser.fromRow(Map<String, Object?> map)
       : id = map[idColumn] as int,
@@ -282,7 +285,7 @@ class DatabaseNotes {
         userId = map[userIdColumn] as int,
         text = map[textColumn] as String,
         isSyncedWithCloud =
-            (map[isSyncedWithCloudColumn] as int) == 1 ? true : false;
+        (map[isSyncedWithCloudColumn] as int) == 1 ? true : false;
 
   @override
   String toString() =>
@@ -300,10 +303,12 @@ const dbName = 'notes.db';
 const noteTable = 'note';
 const userTable = 'user';
 const idColumn = 'id';
-const emailColumn = 'email';
 const userIdColumn = 'user_id';
+//change of up and down
+const emailColumn = 'email';
 const textColumn = 'text';
 const isSyncedWithCloudColumn = 'is_synced_with_cloud';
+//changes made in the table format
 const createUserTable = '''
       CREATE TABLE IF NOT EXISTS "user" (
 	    "id"	INTEGER NOT NULL,
@@ -312,12 +317,12 @@ const createUserTable = '''
       );
       ''';
 const createNoteTable = '''
-     CREATE TABLE "note" (
-	   "id"	INTEGER NOT NULL,
-	   "user_id"	INTEGER NOT NULL,
-	   "text"	TEXT,
-	    "is_synced_with_cloud"	INTEGER NOT NULL DEFAULT 0,
-	    PRIMARY KEY("id"),
- 	    FOREIGN KEY("user_id") REFERENCES "user"("id")
-      );
-      ''';
+     CREATE TABLE IF NOT EXISTS "note" (
+	"id"	INTEGER NOT NULL,
+	"user_id"	INTEGER NOT NULL,
+	"text"	TEXT,
+	"is_synced_with_cloud"	INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY("id" AUTOINCREMENT),
+	FOREIGN KEY("user_id") REFERENCES "user"("id")
+);
+''';

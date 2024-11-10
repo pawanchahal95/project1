@@ -16,5 +16,17 @@ class CouldNotDeleteNotes implements Exception {}
 
 class CouldNotUpdateNote implements Exception{}
 
+//extras
+
+
+class UnableToGetDocumentsDirectory implements Exception {}
+
+class CouldNotDeleteNote implements Exception {}
+
+
+
+class UserShouldBeSetBeforeReadingAllNotes implements Exception {}
+
+
 
 

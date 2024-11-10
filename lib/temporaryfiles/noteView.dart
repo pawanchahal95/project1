@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:proj2/constants/routes.dart';
 import 'package:proj2/enums/menu_actions.dart';
 import 'package:proj2/services/auth/auth_service.dart';
-import 'package:proj2/services/crud/notes_service.dart';
+
+import 'package:proj2/temporaryfiles/notes.dart';
 
 
 
@@ -14,13 +15,13 @@ class NotesView extends StatefulWidget {
 }
 
 class _NotesViewState extends State<NotesView> {
-  late final NotesService _notesService;
+  late final NoteService _notesService;
 
   String get userEmail => AuthService.firebase().currentUser!.email!;
 
   @override
   void initState() {
-    _notesService = NotesService();
+    _notesService = NoteService();
     super.initState();
   }
 
@@ -44,7 +45,7 @@ class _NotesViewState extends State<NotesView> {
           PopupMenuButton<MenuAction>(onSelected: (value) async {
             switch (value) {
               case MenuAction.logout:
-                final shouldLogout = await ShowLogOutDialog(context);
+                final shouldLogout = await showLogOutDialog(context);
                 if (shouldLogout) {
                   AuthService.firebase().logOut();
                   Navigator.of(context)
@@ -109,7 +110,7 @@ class _NotesViewState extends State<NotesView> {
   }
 }
 
-Future<bool> ShowLogOutDialog(BuildContext context) {
+Future<bool> showLogOutDialog(BuildContext context) {
   return showDialog(
       context: context,
       builder: (context) {

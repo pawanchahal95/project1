@@ -1,8 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:proj2/services/auth/auth_service.dart';
-import 'package:proj2/services/crud/notes_service.dart';
-
+import 'package:proj2/temporaryfiles/notes.dart';
 class NewNoteView extends StatefulWidget {
   const NewNoteView({super.key});
 
@@ -12,12 +11,12 @@ class NewNoteView extends StatefulWidget {
 
 class _NewNoteViewState extends State<NewNoteView> {
   DatabaseNotes? _note;
-  late final NotesService _notesService;
+  late final NoteService _notesService;
   late final TextEditingController _textController;
 
   @override
   void initState() {
-    _notesService = NotesService(); // Singleton instance
+    _notesService = NoteService(); // Singleton instance
     _textController = TextEditingController();
     super.initState();
   }
@@ -26,7 +25,7 @@ class _NewNoteViewState extends State<NewNoteView> {
     final note = _note;
     if (note == null) return;
     final text = _textController.text;
-    await _notesService.updateNote(
+    await _notesService.updateNotes(
       note: note,
       text: text,
     );
@@ -43,13 +42,13 @@ class _NewNoteViewState extends State<NewNoteView> {
     final currentUser = AuthService.firebase().currentUser!;
     final email = currentUser.email!;
     final owner = await _notesService.getUser(email: email);
-    return await _notesService.createNote(owner: owner);
+    return await _notesService.createNotes(owner: owner);
   }
 
   void _deleteNoteIfTextIsEmpty() {
     final note = _note;
     if (_textController.text.isEmpty && note != null) {
-      _notesService.deleteNote(id: note.id);
+      _notesService.deleteNotes(id: note.id);
     }
   }
 
@@ -57,7 +56,7 @@ class _NewNoteViewState extends State<NewNoteView> {
     final note = _note;
     final text = _textController.text;
     if (note != null && text.isNotEmpty) {
-      await _notesService.updateNote(
+      await _notesService.updateNotes(
         note: note,
         text: text,
       );
