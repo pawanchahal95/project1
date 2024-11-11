@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:proj2/constants/routes.dart';
 import 'package:proj2/enums/menu_actions.dart';
 import 'package:proj2/services/auth/auth_service.dart';
-
 import 'package:proj2/temporaryfiles/notes.dart';
-
-
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -45,7 +42,7 @@ class _NotesViewState extends State<NotesView> {
           PopupMenuButton<MenuAction>(onSelected: (value) async {
             switch (value) {
               case MenuAction.logout:
-                final shouldLogout = await showLogOutDialog(context);
+                final shouldLogout = await ShowLogOutDialog(context);
                 if (shouldLogout) {
                   AuthService.firebase().logOut();
                   Navigator.of(context)
@@ -86,7 +83,7 @@ class _NotesViewState extends State<NotesView> {
                               final note = allNotes[index];
                               return ListTile(
                                 title: Text(
-                                  note.text,
+                                  note.heading,
                                   maxLines: 1,
                                   softWrap: true,
                                   overflow: TextOverflow.ellipsis,
@@ -110,7 +107,7 @@ class _NotesViewState extends State<NotesView> {
   }
 }
 
-Future<bool> showLogOutDialog(BuildContext context) {
+Future<bool> ShowLogOutDialog(BuildContext context) {
   return showDialog(
       context: context,
       builder: (context) {

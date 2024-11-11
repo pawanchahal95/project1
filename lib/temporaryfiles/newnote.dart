@@ -13,11 +13,13 @@ class _NewNoteViewState extends State<NewNoteView> {
   DatabaseNotes? _note;
   late final NoteService _notesService;
   late final TextEditingController _textController;
+  late final TextEditingController _headingController;
 
   @override
   void initState() {
     _notesService = NoteService(); // Singleton instance
     _textController = TextEditingController();
+    _headingController=TextEditingController();
     super.initState();
   }
 
@@ -30,10 +32,24 @@ class _NewNoteViewState extends State<NewNoteView> {
       text: text,
     );
   }
+  void _headingControllerListener() async {
+    final note = _note;
+    if (note == null) return;
+    final text = _headingController.text;
+    await _notesService.updateHeading(
+      note: note,
+      heading: text,
+    );
+  }
 
   void _setupTextControllerListener() {
     _textController.removeListener(_textControllerListener);
     _textController.addListener(_textControllerListener);
+
+    _headingController.removeListener(_headingControllerListener);
+    _headingController.addListener(_headingControllerListener);
+
+    //one version says  add the heading controller listner here ,and another one says i do it outside of this listner as a new setup listner
   }
 
   Future<DatabaseNotes> createNewNote() async {
@@ -45,9 +61,9 @@ class _NewNoteViewState extends State<NewNoteView> {
     return await _notesService.createNotes(owner: owner);
   }
 
-  void _deleteNoteIfTextIsEmpty() {
+  void _deleteNoteIfHeadingIsEmpty() {
     final note = _note;
-    if (_textController.text.isEmpty && note != null) {
+    if (_headingController.text.isEmpty && note != null) {
       _notesService.deleteNotes(id: note.id);
     }
   }
@@ -65,9 +81,10 @@ class _NewNoteViewState extends State<NewNoteView> {
 
   @override
   void dispose() {
-    _deleteNoteIfTextIsEmpty();
+    _deleteNoteIfHeadingIsEmpty();
     _saveNoteIfTextIsNotEmpty();
     _textController.dispose();
+    _headingController.dispose();
     super.dispose();
   }
 
@@ -84,14 +101,25 @@ class _NewNoteViewState extends State<NewNoteView> {
             case ConnectionState.done:
               _note = snapshot.data as DatabaseNotes;
               _setupTextControllerListener();
-              return TextField(
-                controller: _textController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Write your note...',
-                ),
-                keyboardType: TextInputType.multiline,
-                maxLines: null,
+              return Column(
+                children: [
+                  TextField(
+                    controller: _headingController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      hintText: 'Write Your heading',
+                    ),
+                  ),
+                  TextField(
+                    controller: _textController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      hintText: 'Write your note...',
+                    ),
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
+                  ),
+                ],
               );
             default:
               return const Center(child: CircularProgressIndicator());

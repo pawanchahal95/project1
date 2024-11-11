@@ -5,12 +5,12 @@ import 'constants/routes.dart';
 import 'package:proj2/view/loginView.dart';
 import 'package:proj2/view/registerView.dart';
 
-/*import 'package:proj2/view/notes/new_notes_view.dart';
-import 'package:proj2/view/notes/notesView.dart';*/
+import 'package:proj2/view/notes/new_notes_view.dart';
+import 'package:proj2/view/notes/notesView.dart';
 
 //temporary imports
-import 'temporaryfiles/noteView.dart';
-import 'temporaryfiles/newnote.dart';
+/*import 'temporaryfiles/noteView.dart';
+import 'temporaryfiles/newnote.dart';*/
 
 
 void main() {
@@ -27,15 +27,8 @@ void main() {
       registerRoute: (context) => RegisterVIew(),
       verifyEmailRoute: (context) =>const VerifyEmailView(),
       //original routes
-
       notesRoute: (context) => const NotesView(),
       newNoteRoute: (context) => const NewNoteView(),
-
-
-
-
-
-
     },
   ));
 }

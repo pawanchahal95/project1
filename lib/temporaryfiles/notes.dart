@@ -41,6 +41,33 @@ class NoteService {
 
   Stream<List<DatabaseNotes>> get allNotes => _notesStreamController.stream;
 
+
+  Future<DatabaseNotes> updateHeading(
+      {required DatabaseNotes note,
+        required String heading,
+      })
+  async {
+    await _ensureDbIsOpen();
+    final db = _getDatabaseOrThrow();
+    await getNote(id: note.id);
+    final updateCount = await db.update(
+      noteTable,
+      {
+        headingColumn: heading,
+      },
+      where: 'id = ?',
+      whereArgs: [note.id],
+    );
+    if(updateCount==0){
+      throw CouldNotUpdateNote();
+    }
+    final updatedNote=await getNote(id: note.id);
+    _notes.removeWhere((note) => note.id == updatedNote.id);
+    _notes.add(updatedNote);
+    _notesStreamController.add(_notes);
+    return updatedNote;
+  }
+
   Future<DatabaseUser> getOrCreateUser({required String email}) async {
     await _ensureDbIsOpen();
 
@@ -157,6 +184,7 @@ class NoteService {
       id: notesId,
       userId: owner.id,
       text: text,
+      heading:'sample'
     );
     _notes.add(note);
     _notesStreamController.add(_notes);
@@ -279,24 +307,27 @@ class DatabaseNotes {
   final int id;
   final int userId;
   final String text;
+  final String heading;
 
 
   DatabaseNotes({
     required this.id,
     required this.userId,
     required this.text,
-
+required this.heading
   });
 
   DatabaseNotes.fromRow(Map<String, Object?> map)
       : id = map[idColumn] as int,
         userId = map[userIdColumn] as int,
-        text = map[textColumn] as String;
+        text = map[textColumn] as String,
+         heading=map[headingColumn]as String
+  ;
 
 
   @override
   String toString() =>
-      'Note, Id =$id,userId=$userId,text=$text';
+      'Note, Id =$id,userId=$userId,text=$text,heading=$heading';
 
   @override
   bool operator ==(covariant DatabaseNotes other) => id == other.id;
@@ -316,7 +347,8 @@ const userIdColumn = 'user_id';
 //change of up and down
 const emailColumn = 'email';
 const textColumn = 'text';
-const isSyncedWithCloudColumn = 'is_synced_with_cloud';
+
+const headingColumn='heading';
 //changes made in the table format
 const createUserTable = '''
       CREATE TABLE IF NOT EXISTS "user" (
@@ -330,6 +362,7 @@ const createNoteTable = '''
 	"id"	INTEGER NOT NULL,
 	"user_id"	INTEGER NOT NULL,
 	"text"	TEXT,
+	"heading"	TEXT NOT NULL DEFAULT 'sample',
 	"is_synced_with_cloud"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("user_id") REFERENCES "user"("id")
