@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:proj2/constants/routes.dart';
 import 'package:proj2/services/auth/auth_service.dart';
-import 'package:proj2/utilities/showErrorDialog.dart';
 import 'package:proj2/services/auth/auth_exception.dart';
+
+import '../utilities/dialogs/error_dialog.dart';
 
 class RegisterVIew extends StatefulWidget {
   RegisterVIew({super.key});
@@ -93,13 +94,13 @@ class _RegisterVIewState extends State<RegisterVIew> {
                           verifyEmailRoute,
                         );
                       } on WeakPasswordAuthException {
-                        await ShowErrorDialog(context, 'Weak password');
+                        await showErrorDialog(context, 'Weak password');
                       } on EmailAlreadyInUseAuthException {
-                        await ShowErrorDialog(context, 'Email already in use');
+                        await showErrorDialog(context, 'Email already in use');
                       } on InvalidEmailAuthException {
-                        await ShowErrorDialog(context, 'Invalid email');
+                        await showErrorDialog(context, 'Invalid email');
                       } on GenericAuthException {
-                        await ShowErrorDialog(context, 'Authentication error');
+                        await showErrorDialog(context, 'Authentication error');
                       }
                     },
                     child: Text('Register')),

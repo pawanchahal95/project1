@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:proj2/services/auth/auth_service.dart';
-import 'package:proj2/utilities/showErrorDialog.dart';
+import 'package:proj2/utilities/dialogs/error_dialog.dart';
 import '../../constants/routes.dart';
 import '../../services/auth/auth_exception.dart';
 
@@ -247,13 +247,13 @@ class _LoginPageState extends State<LoginPage> {
                            }
                          }
                          on UserNotFoundAuthException{
-                           await ShowErrorDialog(context, 'User not found');
+                           await showErrorDialog(context, 'User not found');
                          }
                          on WrongPasswordAuthException{
-                           await  ShowErrorDialog(context, 'Wrong credentials');
+                           await  showErrorDialog(context, 'Wrong credentials');
                          }
                          on GenericAuthException{
-                           await  ShowErrorDialog(context, 'Authentication error');
+                           await  showErrorDialog(context, 'Authentication error');
                          }
                       },
                       style: ElevatedButton.styleFrom(
