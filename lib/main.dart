@@ -5,7 +5,7 @@ import 'constants/routes.dart';
 import 'package:proj2/view/loginView.dart';
 import 'package:proj2/view/registerView.dart';
 
-import 'package:proj2/view/notes/new_notes_view.dart';
+import 'package:proj2/view/notes/create_update_notes_view.dart';
 import 'package:proj2/view/notes/notesView.dart';
 
 //temporary imports
@@ -28,7 +28,7 @@ void main() {
       verifyEmailRoute: (context) =>const VerifyEmailView(),
       //original routes
       notesRoute: (context) => const NotesView(),
-      newNoteRoute: (context) => const NewNoteView(),
+      createOrUpdateNoteRoute: (context) => const CreateUpdateNoteView(),
     },
   ));
 }
