@@ -1,3 +1,4 @@
+/*
 class DatabaseAlreadyOpenException implements Exception {}
 
 class UnableToGetDocumentDirectory implements Exception {}
@@ -31,3 +32,4 @@ class CouldNotDeleteNote implements Exception {}
 
 
 
+*/

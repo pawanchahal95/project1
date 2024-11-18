@@ -1,3 +1,4 @@
+/*
 import 'dart:async';
 import 'package:proj2/extensions/list/filter.dart';
 import 'package:sqflite/sqflite.dart';
@@ -348,3 +349,4 @@ const createNoteTable = '''
 	FOREIGN KEY("user_id") REFERENCES "user"("id")
 );
 ''';
+*/

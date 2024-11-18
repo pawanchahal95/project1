@@ -1,17 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proj2/services/cloud/cloud_storage_constants.dart';
 import 'package:proj2/services/cloud/cloud_storage_eceptions.dart';
-
 import 'cloud_note.dart';
 
 class FirebaseCloudStorage {
   final notes = FirebaseFirestore.instance.collection('notes');
 
-  Future<void> deleteNote({required String documentId})async{
-    try{
-    await notes.doc(documentId).delete();
-    }
-    catch(e){
+  Future<void> deleteNote({required String documentId}) async {
+    try {
+      await notes.doc(documentId).delete();
+    } catch (e) {
       throw CouldNotDeleteNoteException();
     }
   }
@@ -32,33 +30,31 @@ class FirebaseCloudStorage {
           .map((doc) => CloudNote.fromSnapshot(doc))
           .where((note) => note.ownerUserId == ownerUsrId));
 
-  Future<Iterable<CloudNote>> getNote({required String ownerUserId}) async {
+  Future<Iterable<CloudNote>>getNote({required String ownerUserId}) async {
     try {
       return await notes
           .where(ownerUserIdFieldName, isEqualTo: ownerUserId)
           .get()
           .then(
-            (value) => value.docs.map(
-              (doc) {
-                return CloudNote(
-                  documentId: doc.id,
-                  ownerUserId: doc.data()[ownerUserIdFieldName] as String,
-                  text: doc.data()[textFieldName] as String,
-                );
-              },
-            ),
+            (value) => value.docs.map((doc) => CloudNote.fromSnapshot(doc)),
           );
     } catch (e) {
       throw CouldNotGetAllNotesException();
     }
   }
 
-  void createNewNote({required String ownerUserId}) async {
-    notes.add({
+  Future<CloudNote> createNewNote({required String ownerUserId}) async {
+    final document = await notes.add({
       ownerUserIdFieldName: ownerUserId,
       textFieldName: '',
     });
-  }
+    final fetchedNote = await document.get();
+    return CloudNote(
+      documentId: fetchedNote.id,
+      ownerUserId: ownerUserId,
+      text: '',
+    );
+   }
 
   static final FirebaseCloudStorage _shared =
       FirebaseCloudStorage._sharedInstance();
