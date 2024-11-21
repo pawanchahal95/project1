@@ -52,8 +52,6 @@ class _NotesViewState extends State<NotesView> {
                 final shouldLogout = await showLogOutDialog(context);
                 if (shouldLogout) {
                   context.read<AuthBloc>().add(const AuthEventLogOut());
-                  Navigator.of(context)
-                      .pushNamedAndRemoveUntil(loginRoute, (route) => false);
                 }
                 break;
             }
@@ -62,10 +60,6 @@ class _NotesViewState extends State<NotesView> {
               PopupMenuItem<MenuAction>(
                 value: MenuAction.logout,
                 child: Text('Logout'),
-              ),
-              PopupMenuItem<MenuAction>(
-                value: MenuAction.logout,
-                child: Text('Logout2 just in case'),
               ),
             ];
           })
@@ -77,7 +71,7 @@ class _NotesViewState extends State<NotesView> {
           switch (snapshot.connectionState) {
             case ConnectionState.active:
             case ConnectionState.waiting:
-              if (snapshot.hasData) {
+              if (snapshot.hasData){
                 final allNotes = snapshot.data as Iterable<CloudNote>;
                 return NotesListView(
                   notes: allNotes,

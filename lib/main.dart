@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:proj2/chatApp/views/chathome.dart';
 import 'package:proj2/services/auth/bloc/auth_bloc.dart';
 import 'package:proj2/services/auth/bloc/auth_event.dart';
 import 'package:proj2/services/auth/bloc/auth_state.dart';
@@ -25,11 +26,6 @@ void main()  {
       child: const HomePage(),
     ),
     routes: {
-      loginRoute: (context) => const LoginView(),
-      registerRoute: (context) => RegisterVIew(),
-      verifyEmailRoute: (context) => const VerifyEmailView(),
-      //original routes
-      notesRoute: (context) => const NotesView(),
       createOrUpdateNoteRoute: (context) => const CreateUpdateNoteView(),
     },
   ));
@@ -49,12 +45,18 @@ class _HomePageState extends State<HomePage> {
 
     return BlocBuilder<AuthBloc,AuthState>(builder: (context, state) {
       if (state is AuthStateLoggedIn) {
-        return const NotesView();
+        //temporary changes
+       // return const NotesView();
+        return const ChatHome();
       } else if (state is AuthStateNeedsVerification) {
         return const VerifyEmailView();
       } else if (state is AuthStateLoggedOut) {
         return const LoginView();
-      } else if(state is AuthStateLoading) {
+      }
+      else if(state is AuthStateRegistering){
+        return const RegisterView();
+      }
+      else if(state is AuthStateUninitialized) {
         return const Scaffold(
           body: CircularProgressIndicator(),
         );
