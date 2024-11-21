@@ -54,10 +54,7 @@ class _ChatHomeState extends State<ChatHome> {
             }
           }, itemBuilder: (context) {
             return const [
-              PopupMenuItem<MenuAction>(
-                value: MenuAction.logout,
-                child: Text('Logout'),
-              ),
+              PopupMenuItem<MenuAction>(value: MenuAction.logout, child: Text('Logout')),
             ];
           }),
         ],
@@ -89,20 +86,31 @@ class _ChatHomeState extends State<ChatHome> {
                     itemCount: users.length,
                     itemBuilder: (context, index) {
                       final user = users[index];
-                      return ListTile(
-                        title: Text(user.email),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatPage(
-                                currentUser:
-                                AuthService.firebase().currentUser!.email,
-                                chatWith: user.email,
-                              ),
-                            ),
-                          );
-                        },
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 4,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          title: Text(
+                            user.email,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.chat_bubble, color: Colors.red),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatPage(
+                                    currentUser: AuthService.firebase().currentUser!.email,
+                                    chatWith: user.email,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       );
                     },
                   );
@@ -154,19 +162,31 @@ class NewPage extends StatelessWidget {
             itemCount: users.length,
             itemBuilder: (context, index) {
               final user = users[index];
-              return ListTile(
-                title: Text(user.email),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatPage(
-                        currentUser: AuthService.firebase().currentUser!.email,
-                        chatWith: user.email,
-                      ),
-                    ),
-                  );
-                },
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 4,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  title: Text(
+                    user.email,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.chat_bubble, color: Colors.red),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatPage(
+                            currentUser: AuthService.firebase().currentUser!.email,
+                            chatWith: user.email,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               );
             },
           );
@@ -225,14 +245,21 @@ class _ChatPageState extends State<ChatPage> {
                     final isSentByCurrentUser =
                         chat.senderId == widget.currentUser;
 
-                    return ListTile(
-                      title: Text(chat.message),
-                      subtitle: Text(
-                        isSentByCurrentUser ? 'You' : widget.chatWith,
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 4,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        title: Text(chat.message),
+                        subtitle: Text(
+                          isSentByCurrentUser ? 'You' : widget.chatWith,
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        trailing: isSentByCurrentUser
+                            ? const Icon(Icons.arrow_forward)
+                            : const Icon(Icons.arrow_back),
                       ),
-                      trailing: isSentByCurrentUser
-                          ? const Icon(Icons.arrow_forward)
-                          : const Icon(Icons.arrow_back),
                     );
                   },
                 );
@@ -248,11 +275,14 @@ class _ChatPageState extends State<ChatPage> {
                     controller: _messageController,
                     decoration: const InputDecoration(
                       hintText: 'Type a message...',
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.white,
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.send),
+                  icon: const Icon(Icons.send, color: Colors.red),
                   onPressed: () async {
                     final message = _messageController.text.trim();
                     if (message.isNotEmpty) {

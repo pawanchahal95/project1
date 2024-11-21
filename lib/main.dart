@@ -6,6 +6,7 @@ import 'package:proj2/services/auth/bloc/auth_event.dart';
 import 'package:proj2/services/auth/bloc/auth_state.dart';
 import 'package:proj2/services/auth/firebase_auth_provider.dart';
 import 'package:proj2/view/VerifyEmailView.dart';
+import 'chatApp/views/ChatHomePage.dart';
 import 'constants/routes.dart';
 import 'package:proj2/view/loginView.dart';
 import 'package:proj2/view/registerView.dart';
@@ -47,7 +48,7 @@ class _HomePageState extends State<HomePage> {
       if (state is AuthStateLoggedIn) {
         //temporary changes
        // return const NotesView();
-        return const ChatHome();
+        return const ChatHomePage();
       } else if (state is AuthStateNeedsVerification) {
         return const VerifyEmailView();
       } else if (state is AuthStateLoggedOut) {

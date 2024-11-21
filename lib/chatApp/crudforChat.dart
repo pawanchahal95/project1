@@ -16,6 +16,7 @@ const userTable = 'user';
 const chatRoomTable = 'chatroom';
 
 const emailColumn = 'email';
+const nameColumn='UserName';
 const messageColumn = 'message';
 const senderIdColumn = 'SenderId';
 const receiverIdColumn = 'ReceiverId';
@@ -28,6 +29,8 @@ const userTableSQL = '''
 CREATE TABLE IF NOT EXISTS "user" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "email" TEXT NOT NULL UNIQUE
+  "UserName" TEXT NOT NULL UNIQUE
+
 );''';
 
 const chatRoomTableSQL = '''
@@ -110,6 +113,7 @@ class ChatService {
     if (db == null) throw DatabaseIsNotOpen();
     return db;
   }
+
   // Cache data
   Future<void> _cacheUsers() async {
     final allUsers = await _getAllUsersFromDb();
@@ -124,17 +128,17 @@ class ChatService {
   }
 
   // Users
-  Future<DatabaseUsers?> getOrCreateUser({required String email}) async {
+  Future<DatabaseUsers?> getOrCreateUser({required String email,required String name}) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
     try {
       // Check if user exists
-      final result = await db.query(userTable, where: '$emailColumn = ?', whereArgs: [email]);
+      final result = await db.query(userTable, where: '$emailColumn = ?,$nameColumn=?', whereArgs: [email,name]);
       if (result.isEmpty) {
         // Create a new user
-        final userId = await db.insert(userTable, {emailColumn: email});
-        final newUser = DatabaseUsers(id: userId, email: email);
+        final userId = await db.insert(userTable, {emailColumn: email,nameColumn:name});
+        final newUser = DatabaseUsers(id: userId, email: email,name: name);
 
         // Cache and notify listeners
         _users.add(newUser);
@@ -233,10 +237,14 @@ class ChatRoom {
 class DatabaseUsers {
   final int id;
   final String email;
+  final String name;
 
-  DatabaseUsers({required this.id, required this.email});
+  DatabaseUsers({required this.id, required this.email,required this.name});
 
   DatabaseUsers.fromRow(Map<String, Object?> row)
       : id = row['id'] as int,
-        email = row[emailColumn] as String;
+        email = row[emailColumn] as String,
+        name = row[nameColumn]as String;
+
 }
+
