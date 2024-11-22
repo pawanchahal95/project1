@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:proj2/chatApp/chat.dart';
+import 'package:proj2/chatApp/views/ChatMessage.dart';
+import 'package:proj2/services/auth/auth_service.dart';
 import '../../enums/menu_actions.dart';
-import '../../services/auth/auth_service.dart';
 import '../../services/auth/bloc/auth_bloc.dart';
 import '../../services/auth/bloc/auth_event.dart';
 import '../../utilities/dialogs/logout_dialog.dart';
 
-class ChatHome extends StatefulWidget {
-  const ChatHome({super.key});
+class ListUser extends StatefulWidget {
+  const ListUser({super.key});
 
   @override
-  State<ChatHome> createState() => _ChatHomeState();
+  State<ListUser> createState() => _ListUserState();
 }
 
-class _ChatHomeState extends State<ChatHome> {
+class _ListUserState extends State<ListUser> {
   late final TextEditingController _controller;
   late final ChatService _chatService;
   late final String email;
@@ -40,71 +41,126 @@ class _ChatHomeState extends State<ChatHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chat Home Page"),
-        backgroundColor: Colors.red,
+        title: const Text(
+          "Lots of Other Users",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.green, // WhatsApp Green
         actions: [
-          PopupMenuButton<MenuAction>(onSelected: (value) async {
-            switch (value) {
-              case MenuAction.logout:
-                final shouldLogout = await showLogOutDialog(context);
-                if (shouldLogout) {
-                  context.read<AuthBloc>().add(const AuthEventLogOut());
-                }
-                break;
-            }
-          }, itemBuilder: (context) {
-            return const [
-              PopupMenuItem<MenuAction>(value: MenuAction.logout, child: Text('Logout')),
-            ];
-          }),
+          PopupMenuButton<MenuAction>(
+            onSelected: (value) async {
+              switch (value) {
+                case MenuAction.logout:
+                  final shouldLogout = await showLogOutDialog(context);
+                  if (shouldLogout) {
+                    context.read<AuthBloc>().add(const AuthEventLogOut());
+                  }
+                  break;
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem<MenuAction>(
+                value: MenuAction.logout,
+                child: Text('Logout'),
+              ),
+            ],
+          ),
         ],
       ),
-      body: FutureBuilder(
-        future: _chatService.getOrCreateUser(email: email),
+      body: FutureBuilder<void>(
+        future: _initializeUser(), // Avoid redundant calls
         builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.waiting:
-              return const Center(child: CircularProgressIndicator());
-            case ConnectionState.done:
-              if (snapshot.hasError) {
-                return Center(child: Text("Error: ${snapshot.error}"));
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text("Error: ${snapshot.error}"),
+            );
+          }
+
+          return StreamBuilder<List<DatabaseUsers>>(
+            stream: _chatService.allNewUsers,
+            builder: (context, userSnapshot) {
+              if (userSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
               }
-              if (!snapshot.hasData) {
-                return const Center(child: Text("No user found or created"));
+
+              if (userSnapshot.hasError) {
+                return Center(child: Text("Error: ${userSnapshot.error}"));
               }
-              return StreamBuilder<List<DatabaseUsers>>(
-                stream: _chatService.allUsers,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+
+              final users = userSnapshot.data ?? [];
+              return StreamBuilder<List<ChatRoom>>(
+                stream: _chatService.allNewChatsList,
+                builder: (context, chatSnapshot) {
+                  if (chatSnapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  if (snapshot.hasError) {
-                    return Center(child: Text("Error: ${snapshot.error}"));
+
+                  if (chatSnapshot.hasError) {
+                    return Center(child: Text("Error: ${chatSnapshot.error}"));
                   }
-                  final users = snapshot.data ?? [];
+
+                  final chatList = chatSnapshot.data ?? [];
+                  final relevantChats = chatList.where((chat) =>
+                  chat.senderId == email || chat.receiverId == email).toList();
+
+                  final Set<String> uniqueUsers = {
+                    for (final user in users) user.email
+                  };
+
+                  for (final chat in relevantChats) {
+                    if (chat.senderId == email) {
+                      uniqueUsers.remove(chat.receiverId);
+                    } else {
+                      uniqueUsers.remove(chat.senderId);
+                    }
+                  }
+
+                  if (uniqueUsers.isEmpty) {
+                    return const Center(child: Text("No users available to chat"));
+                  }
+
                   return ListView.builder(
-                    itemCount: users.length,
+                    itemCount: uniqueUsers.length,
                     itemBuilder: (context, index) {
-                      final user = users[index];
+                      final user = uniqueUsers.elementAt(index);
                       return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         elevation: 4,
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
                           title: Text(
-                            user.email,
+                            user,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           trailing: IconButton(
-                            icon: const Icon(Icons.chat_bubble, color: Colors.red),
+                            icon: const Icon(
+                              Icons.chat_bubble,
+                              color: Colors.red,
+                            ),
                             onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ChatPage(
-                                    currentUser: AuthService.firebase().currentUser!.email,
-                                    chatWith: user.email,
+                                  builder: (context) => ChatView(
+                                    currentUser: AuthService.firebase()
+                                        .currentUser!
+                                        .email,
+                                    chatWith: user,
                                   ),
                                 ),
                               );
@@ -116,190 +172,50 @@ class _ChatHomeState extends State<ChatHome> {
                   );
                 },
               );
-            default:
-              return const Center(child: Text("Something went wrong"));
-          }
+            },
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => NewPage()),
-          );
+          // Add relevant functionality here
         },
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.green, // WhatsApp Green
         child: const Icon(Icons.people),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-}
 
-class NewPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("All Users"),
-        backgroundColor: Colors.red,
-      ),
-      body: StreamBuilder<List<DatabaseUsers>>(
-        stream: ChatService().allUsers,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          }
-          final users = snapshot.data ?? [];
-          return ListView.builder(
-            itemCount: users.length,
-            itemBuilder: (context, index) {
-              final user = users[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                elevation: 4,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  title: Text(
-                    user.email,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.chat_bubble, color: Colors.red),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatPage(
-                            currentUser: AuthService.firebase().currentUser!.email,
-                            chatWith: user.email,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-class ChatPage extends StatefulWidget {
-  final String currentUser;
-  final String chatWith;
-
-  const ChatPage({
-    Key? key,
-    required this.currentUser,
-    required this.chatWith,
-  }) : super(key: key);
-
-  @override
-  _ChatPageState createState() => _ChatPageState();
-}
-
-class _ChatPageState extends State<ChatPage> {
-  final ChatService _chatService = ChatService();
-  final TextEditingController _messageController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Chat with ${widget.chatWith}'),
-        backgroundColor: Colors.red,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<List<ChatRoom>>(
-              stream: _chatService.allChats,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final chats = snapshot.data ?? [];
-                final relevantChats = chats.where((chat) =>
-                (chat.senderId == widget.currentUser &&
-                    chat.receiverId == widget.chatWith) ||
-                    (chat.senderId == widget.chatWith &&
-                        chat.receiverId == widget.currentUser));
-
-                return ListView.builder(
-                  itemCount: relevantChats.length,
-                  itemBuilder: (context, index) {
-                    final chat = relevantChats.elementAt(index);
-                    final isSentByCurrentUser =
-                        chat.senderId == widget.currentUser;
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      elevation: 4,
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        title: Text(chat.message),
-                        subtitle: Text(
-                          isSentByCurrentUser ? 'You' : widget.chatWith,
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                        trailing: isSentByCurrentUser
-                            ? const Icon(Icons.arrow_forward)
-                            : const Icon(Icons.arrow_back),
-                      ),
-                    );
-                  },
-                );
+  // Function to show the dialog or navigate to the edit username screen
+  void _showUserDialog(String userEmail) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Edit Username"),
+          content: TextField(
+            controller: TextEditingController(text: userEmail),
+            decoration: const InputDecoration(labelText: 'Enter new username'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
               },
+              child: const Text("Cancel"),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type a message...',
-                      border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Colors.red),
-                  onPressed: () async {
-                    final message = _messageController.text.trim();
-                    if (message.isNotEmpty) {
-                      await _chatService.createChat(
-                        message: message,
-                        senderId: widget.currentUser,
-                        receiverId: widget.chatWith,
-                      );
-                      _messageController.clear();
-                    }
-                  },
-                ),
-              ],
+            TextButton(
+              onPressed: () {
+                // Handle saving the new username here
+                // You can update the username by calling a function from your ChatService or AuthService
+                Navigator.pop(context);
+              },
+              child: const Text("Save"),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }

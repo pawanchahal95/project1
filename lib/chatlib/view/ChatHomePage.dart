@@ -1,11 +1,8 @@
-import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:proj2/chatApp/chat.dart';
 import 'package:proj2/chatApp/views/ChatMessage.dart';
 import 'package:proj2/services/auth/auth_service.dart';
-import 'package:sqflite/sqflite.dart';
-import '../../constants/routes.dart';
 import '../../enums/menu_actions.dart';
 import '../../services/auth/bloc/auth_bloc.dart';
 import '../../services/auth/bloc/auth_event.dart';
@@ -42,24 +39,24 @@ class _ChatHomePageState extends State<ChatHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("WhatsApp",
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.green,
+        title: const Text("Chat Home Page"),
+        backgroundColor: Colors.red,
         actions: [
-          PopupMenuButton<MenuAction>(
-            onSelected: (value) async {
-              if (value == MenuAction.logout) {
+          PopupMenuButton<MenuAction>(onSelected: (value) async {
+            switch (value) {
+              case MenuAction.logout:
                 final shouldLogout = await showLogOutDialog(context);
                 if (shouldLogout) {
                   context.read<AuthBloc>().add(const AuthEventLogOut());
                 }
-              }
-            },
-            itemBuilder: (context) => const [
+                break;
+            }
+          }, itemBuilder: (context) {
+            return const [
               PopupMenuItem<MenuAction>(
                   value: MenuAction.logout, child: Text('Logout')),
-            ],
-          ),
+            ];
+          }),
         ],
       ),
       body: FutureBuilder(
@@ -75,9 +72,9 @@ class _ChatHomePageState extends State<ChatHomePage> {
               if (!snapshot.hasData) {
                 return const Center(child: Text("No user found or created"));
               }
-
-              return StreamBuilder<List<ChatRoom>>(
-                stream: _chatService.allChats,
+              //filterless
+              return StreamBuilder<List<DatabaseUsers>>(
+                stream: _chatService.allUsers,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -85,67 +82,60 @@ class _ChatHomePageState extends State<ChatHomePage> {
                   if (snapshot.hasError) {
                     return Center(child: Text("Error: ${snapshot.error}"));
                   }
-                  final chats = snapshot.data ?? [];
-                  final relevantChats = chats
-                      .where((chat) =>
-                          chat.senderId == email || chat.receiverId == email)
-                      .toList();
-
-                  // Filter unique chat users
-                  final Set<String> uniqueUsers = {};
-                  for (final chat in relevantChats) {
-                    if (chat.senderId == email) {
-                      uniqueUsers.add(chat.receiverId);
-                    } else {
-                      uniqueUsers.add(chat.senderId);
-                    }
-                  }
-
-                  if (uniqueUsers.isEmpty) {
-                    return const Center(child: Text("No chats found"));
-                  }
-
+                  final users = snapshot.data ?? [];
                   return ListView.builder(
-                    itemCount: uniqueUsers.length,
+                    itemCount: users.length,
                     itemBuilder: (context, index) {
-                      final chatPartner = uniqueUsers.elementAt(index);
-
-                      return ListTile(
-                        title: Text(chatPartner),
-                        subtitle: const Text("Last message..."),
-                        // Placeholder for actual last message
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ChatView(
-                                    currentUser: AuthService
-                                        .firebase()
-                                        .currentUser!
-                                        .email,
-                                    chatWith: chatPartner,
-                                  ),
-                            ),
-                          );
-                        },
+                      final user = users[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius
+                            .circular(10)),
+                        elevation: 4,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 16),
+                          title: Text(
+                            user.email,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(
+                                Icons.chat_bubble, color: Colors.red),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ChatView(
+                                        currentUser: AuthService
+                                            .firebase()
+                                            .currentUser!
+                                            .email,
+                                        chatWith: user.email,
+                                      ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       );
                     },
                   );
                 },
               );
 
-
             default:
-              return Text("messed up");
+              return const Center(child: Text("Something went wrong"));
           }
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).pushNamed(ListUserRoute);
+
         },
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.red,
         child: const Icon(Icons.people),
       ),
     );

@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -6,9 +5,13 @@ import 'package:path/path.dart';
 
 // Custom Exceptions
 class DatabaseAlreadyOpenException implements Exception {}
+
 class DatabaseIsNotOpen implements Exception {}
+
 class CouldNotFindUser implements Exception {}
+
 class UnableToGetDocumentDirectory implements Exception {}
+
 class CouldNotDeleteChat implements Exception {}
 
 // Constants for database table and columns
@@ -47,15 +50,34 @@ class ChatService {
   late final StreamController<List<ChatRoom>> _chatStreamController;
   late final StreamController<List<DatabaseUsers>> _usersStreamController;
 
+  late final StreamController<List<ChatRoom>> _newChatStreamController;
+  late final StreamController<List<ChatRoom>> _newChatListStreamController;
+
+  late final StreamController<List<DatabaseUsers>> _newUsersStreamController;
+
   static final ChatService _shared = ChatService._sharedInstance();
 
   ChatService._sharedInstance() {
-    _chatStreamController = StreamController<List<ChatRoom>>.broadcast(onListen: () {
+    _chatStreamController =
+        StreamController<List<ChatRoom>>.broadcast(onListen: () {
       _chatStreamController.add(_chats);
     });
+    _newChatListStreamController =
+    StreamController<List<ChatRoom>>.broadcast(onListen: () {
+      _newChatListStreamController.add(_chats);
+    });
+    _newChatStreamController =
+        StreamController<List<ChatRoom>>.broadcast(onListen: () {
+      _newChatStreamController.add(_chats);
+    });
 
-    _usersStreamController = StreamController<List<DatabaseUsers>>.broadcast(onListen: () {
+    _usersStreamController =
+        StreamController<List<DatabaseUsers>>.broadcast(onListen: () {
       _usersStreamController.add(_users);
+    });
+    _newUsersStreamController =
+        StreamController<List<DatabaseUsers>>.broadcast(onListen: () {
+      _newUsersStreamController.add(_users);
     });
   }
 
@@ -63,7 +85,14 @@ class ChatService {
 
   // Streams
   Stream<List<ChatRoom>> get allChats => _chatStreamController.stream;
+
   Stream<List<DatabaseUsers>> get allUsers => _usersStreamController.stream;
+
+  Stream<List<ChatRoom>> get allNewChats => _newChatStreamController.stream;
+  Stream<List<ChatRoom>> get allNewChatsList => _newChatListStreamController.stream;
+
+  Stream<List<DatabaseUsers>> get allNewUsers => _newUsersStreamController.stream;
+
 
   // Open the database
   Future<void> open() async {
@@ -99,6 +128,9 @@ class ChatService {
 
     await _chatStreamController.close();
     await _usersStreamController.close();
+    await _newUsersStreamController.close();
+    await _newChatStreamController.close();
+    await _newChatListStreamController.close();
   }
 
   Future<void> _ensureDbIsOpen() async {
@@ -110,17 +142,21 @@ class ChatService {
     if (db == null) throw DatabaseIsNotOpen();
     return db;
   }
+
   // Cache data
   Future<void> _cacheUsers() async {
     final allUsers = await _getAllUsersFromDb();
     _users = allUsers.toList();
     _usersStreamController.add(_users);
+    _newUsersStreamController.add(_users);
   }
 
   Future<void> _cacheChats() async {
     final allChats = await _getAllChatsFromDb();
     _chats = allChats.toList();
     _chatStreamController.add(_chats);
+    _newChatStreamController.add(_chats);
+    _newChatListStreamController.add(_chats);
   }
 
   // Users
@@ -130,7 +166,8 @@ class ChatService {
 
     try {
       // Check if user exists
-      final result = await db.query(userTable, where: '$emailColumn = ?', whereArgs: [email]);
+      final result = await db
+          .query(userTable, where: '$emailColumn = ?', whereArgs: [email]);
       if (result.isEmpty) {
         // Create a new user
         final userId = await db.insert(userTable, {emailColumn: email});
@@ -139,6 +176,7 @@ class ChatService {
         // Cache and notify listeners
         _users.add(newUser);
         _usersStreamController.add(_users);
+        _newUsersStreamController.add(_users);
 
         return newUser;
       }
@@ -162,8 +200,7 @@ class ChatService {
     required String message,
     required String senderId,
     required String receiverId,
-  })
-  async {
+  }) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
@@ -184,19 +221,25 @@ class ChatService {
     // Cache and notify listeners
     _chats.add(newChat);
     _chatStreamController.add(_chats);
+    _newChatStreamController.add(_chats);
+    _newChatListStreamController.add(_chats);
 
     return newChat;
   }
 
   Future<void> deleteChat({required int id}) async {
     final db = _getDatabaseOrThrow();
-    final deletedCount = await db.delete(chatRoomTable, where: "id = ?", whereArgs: [id]);
+    final deletedCount =
+        await db.delete(chatRoomTable, where: "id = ?", whereArgs: [id]);
 
     if (deletedCount != 1) throw CouldNotDeleteChat();
 
     // Update cache and notify listeners
     _chats.removeWhere((chat) => chat.id == id);
     _chatStreamController.add(_chats);
+    _newChatStreamController.add(_chats);
+    _newChatListStreamController.add(_chats);
+
   }
 
   Future<List<ChatRoom>> _getAllChatsFromDb() async {
