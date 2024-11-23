@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:proj2/chatApp/chat.dart';
-import 'package:proj2/chatApp/views/ChatMessage.dart';
+import 'package:proj2/chatApp/cloudChat/view/ChatMessage.dart';
 import 'package:proj2/services/auth/auth_service.dart';
-import '../../enums/menu_actions.dart';
-import '../../services/auth/bloc/auth_bloc.dart';
-import '../../services/auth/bloc/auth_event.dart';
-import '../../utilities/dialogs/logout_dialog.dart';
+
+import 'package:proj2/chatApp/cloudChat/chat.dart';
+import '../../../enums/menu_actions.dart';
+import '../../../services/auth/bloc/auth_bloc.dart';
+import '../../../services/auth/bloc/auth_event.dart';
+import '../../../utilities/dialogs/logout_dialog.dart';
 
 class ListUser extends StatefulWidget {
   const ListUser({super.key});
@@ -17,35 +18,32 @@ class ListUser extends StatefulWidget {
 
 class _ListUserState extends State<ListUser> {
   late final TextEditingController _controller;
-  late final ChatService _chatService;
+  late final FirebaseCloudStorage _chatService;
   late final String email;
 
   @override
   void initState() {
     super.initState();
-    _chatService = ChatService();
+    _chatService = FirebaseCloudStorage();
     _controller = TextEditingController();
     email = AuthService.firebase().currentUser!.email;
-    _initializeUser();
   }
 
-  Future<void> _initializeUser() async {
-    try {
-      await _chatService.getOrCreateUser(email: email);
-    } catch (e) {
-      print('Error initializing user: $e');
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Lots of Other Users",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          "Contacts",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            color: Colors.white,
+          ),
         ),
-        backgroundColor: Colors.green, // WhatsApp Green
+        backgroundColor: Colors.green.shade700, // WhatsApp Green
         actions: [
           PopupMenuButton<MenuAction>(
             onSelected: (value) async {
@@ -68,22 +66,18 @@ class _ListUserState extends State<ListUser> {
         ],
       ),
       body: FutureBuilder<void>(
-        future: _initializeUser(), // Avoid redundant calls
+        future: _chatService.getUser(email: email),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Text("Error: ${snapshot.error}"),
-            );
+            return Center(child: Text("Error: ${snapshot.error}"));
           }
 
-          return StreamBuilder<List<DatabaseUsers>>(
-            stream: _chatService.allNewUsers,
+          return StreamBuilder<Iterable<CloudUser>>(
+            stream: _chatService.allUsersList(),
             builder: (context, userSnapshot) {
               if (userSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -95,7 +89,7 @@ class _ListUserState extends State<ListUser> {
 
               final users = userSnapshot.data ?? [];
               return StreamBuilder<List<ChatRoom>>(
-                stream: _chatService.allNewChatsList,
+                stream: _chatService.getChatRoomsStream(),
                 builder: (context, chatSnapshot) {
                   if (chatSnapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -130,41 +124,52 @@ class _ListUserState extends State<ListUser> {
                     itemBuilder: (context, index) {
                       final user = uniqueUsers.elementAt(index);
                       return Card(
-                        margin: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 4,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 16,
-                          ),
-                          title: Text(
-                            user,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(
-                              Icons.chat_bubble,
-                              color: Colors.red,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatView(
-                                    currentUser: AuthService.firebase()
-                                        .currentUser!
-                                        .email,
-                                    chatWith: user,
-                                  ),
+                        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 6,
+                        shadowColor: Colors.black26,
+                        child: GestureDetector( // Wrap the ListTile with GestureDetector
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChatView(
+                                  currentUser: AuthService.firebase().currentUser!.email,
+                                  chatWith: user,
                                 ),
-                              );
-                            },
+                              ),
+                            );
+                          },
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                            leading: CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.grey.shade300,
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.green.shade700,
+                                size: 30,
+                              ),
+                            ),
+                            title: Text(
+                              user,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            subtitle: const Text(
+                              "Tap to chat",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.chat_bubble,
+                              color: Colors.green,
+                            ),
                           ),
                         ),
                       );
@@ -176,18 +181,9 @@ class _ListUserState extends State<ListUser> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add relevant functionality here
-        },
-        backgroundColor: Colors.green, // WhatsApp Green
-        child: const Icon(Icons.people),
-      ),
     );
   }
 
-
-  // Function to show the dialog or navigate to the edit username screen
   void _showUserDialog(String userEmail) {
     showDialog(
       context: context,
@@ -208,7 +204,6 @@ class _ListUserState extends State<ListUser> {
             TextButton(
               onPressed: () {
                 // Handle saving the new username here
-                // You can update the username by calling a function from your ChatService or AuthService
                 Navigator.pop(context);
               },
               child: const Text("Save"),

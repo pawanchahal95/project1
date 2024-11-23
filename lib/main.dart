@@ -11,9 +11,12 @@ import 'package:proj2/view/registerView.dart';
 import 'package:proj2/view/notes/create_update_notes_view.dart';
 import 'package:proj2/view/notes/notesView.dart';
 //for the chat app i worked myself
-import 'chatApp/views/ChatHomePage.dart';
-import 'package:proj2/chatApp/views/chathome.dart';
+//import 'chatApp/views/ChatHomePage.dart';
 //for the page that i created using tutorial
+import 'package:proj2/chatApp/cloudChat/view/chatHomePage.dart';
+
+//for sample testing
+import 'package:proj2/chatApp/cloudChat/view/profile.dart';
 void main()  {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MaterialApp(
@@ -29,7 +32,6 @@ void main()  {
     ),
     routes: {
       createOrUpdateNoteRoute: (context) => const CreateUpdateNoteView(),
-      ListUserRoute: (context) => const ListUser(),
 
     },
   ));
@@ -50,8 +52,9 @@ class _HomePageState extends State<HomePage> {
     return BlocBuilder<AuthBloc,AuthState>(builder: (context, state) {
       if (state is AuthStateLoggedIn) {
         //temporary changes
-       // return const NotesView();
+       //return const NotesView();
         return const ChatHomePage();
+        //return const UserManagementPage();
       } else if (state is AuthStateNeedsVerification) {
         return const VerifyEmailView();
       } else if (state is AuthStateLoggedOut) {

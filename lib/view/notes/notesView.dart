@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:proj2/constants/routes.dart';
 import 'package:proj2/enums/menu_actions.dart';
-import 'package:proj2/main.dart';
 import 'package:proj2/services/auth/auth_service.dart';
 import 'package:proj2/services/auth/bloc/auth_bloc.dart';
 import 'package:proj2/services/auth/bloc/auth_event.dart';
